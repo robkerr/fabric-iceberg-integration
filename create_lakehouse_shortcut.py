@@ -127,6 +127,7 @@ def create_shortcut(
     location: str,
     table_path: str,
     token: str,
+    schema: str = "dbo",
 ) -> dict:
     """Create a GCS shortcut in the Lakehouse Tables section."""
     # Derive shortcut name from the last path segment
@@ -135,13 +136,16 @@ def create_shortcut(
     # Ensure subpath has a leading slash
     subpath = f"/{table_path.strip('/')}"
 
+    # For schema-enabled lakehouses, place shortcuts under Tables/<schema>
+    shortcut_path = f"Tables/{schema}" if schema else "Tables"
+
     url = (
         f"{FABRIC_API_BASE}/workspaces/{workspace_id}"
         f"/items/{lakehouse_id}/shortcuts"
     )
 
     body = {
-        "path": "Tables",
+        "path": shortcut_path,
         "name": shortcut_name,
         "target": {
             "googleCloudStorage": {
@@ -152,7 +156,7 @@ def create_shortcut(
         },
     }
 
-    print(f"Creating shortcut '{shortcut_name}' -> {location}{subpath}")
+    print(f"Creating shortcut '{shortcut_name}' in {shortcut_path} -> {location}{subpath}")
 
     req = Request(
         url,
@@ -221,6 +225,7 @@ def cmd_create_shortcut(args):
         location=location,
         table_path=args.table_path,
         token=token,
+        schema=args.schema,
     )
 
 
@@ -259,6 +264,11 @@ def main():
     cs_parser.add_argument(
         "--table-path", required=True,
         help='Path to the Iceberg table in the bucket, e.g. "consulting/engagement_roles"',
+    )
+    cs_parser.add_argument(
+        "--schema", default="dbo",
+        help='Lakehouse schema to place the shortcut under (default: "dbo"). '
+             'Use --schema "" for non-schema-enabled lakehouses.',
     )
 
     args = parser.parse_args()
