@@ -13,4 +13,15 @@ overwrite: true                        # Replace shortcuts if they already exist
 # Each entry is the path to an Iceberg table within the GCS bucket.
 # The shortcut name is derived from the last segment (e.g. "engagement_roles").
 table_paths:
+  - "consulting/clients"
+  - "consulting/consultant_availability"
+  - "consulting/consultant_skills"
+  - "consulting/consultants"
   - "consulting/engagement_roles"
+  - "consulting/engagements"
+  - "consulting/opportunities"
+  - "consulting/phases"
+  - "consulting/practices"
+  - "consulting/role_skill_requirements"
+  - "consulting/skills"
+  - "consulting/staffing_assignments"

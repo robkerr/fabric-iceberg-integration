@@ -15,6 +15,9 @@ Usage:
   python create_lakehouse_shortcut.py --list-connections [--filter NAME]
 
 See shortcuts.yaml for the config file format.
+
+Reference:
+  https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-shortcuts/create-shortcut
 """
 
 import argparse
