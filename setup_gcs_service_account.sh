@@ -41,8 +41,8 @@ gcloud iam service-accounts create "${SA_NAME}" \
   2>/dev/null || echo "  (Service account may already exist, continuing...)"
 
 # Allow time for IAM propagation before assigning roles
-echo "  Waiting for IAM propagation..."
-sleep 10
+echo "  Waiting 30s for IAM propagation..."
+sleep 30
 
 echo ""
 echo "=== Granting roles/storage.objectAdmin on gs://${BUCKET_NAME} ==="
