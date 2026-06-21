@@ -4,11 +4,17 @@ in Google Cloud Storage.
 
 Prerequisites:
   - Azure CLI installed and signed in (`az login`)
+  - Google Cloud CLI installed and signed in (`gcloud auth login`) — for
+    auto-discovery mode
   - A Fabric connection to GCS already configured in your tenant
   - PyYAML installed (`pip install pyyaml`)
 
 Usage:
-  # Create shortcuts from a YAML config file
+  # Create shortcuts from a YAML config file (manual table_paths)
+  python create_lakehouse_shortcut.py shortcuts.yaml
+
+  # Auto-discover Iceberg tables in a GCS prefix and create shortcuts
+  # (set gcs_bucket + gcs_prefix in YAML, omit table_paths)
   python create_lakehouse_shortcut.py shortcuts.yaml
 
   # Find your connection GUID by name
@@ -121,6 +127,76 @@ def resolve_connection(connection_ref: str, token: str) -> tuple[str, str | None
     return conn_id, location
 
 
+def discover_iceberg_tables(gcs_bucket: str, gcs_prefix: str) -> list[str]:
+    """
+    Scan a GCS bucket/prefix for Iceberg tables using gcloud storage ls.
+    An Iceberg table is identified by the presence of a metadata/ subfolder.
+    Returns a list of table paths relative to the bucket root.
+    """
+    # Normalize: ensure bucket starts with gs:// and prefix has no leading/trailing slashes
+    if not gcs_bucket.startswith("gs://"):
+        gcs_bucket = f"gs://{gcs_bucket}"
+    gcs_bucket = gcs_bucket.rstrip("/")
+    gcs_prefix = gcs_prefix.strip("/")
+
+    scan_url = f"{gcs_bucket}/{gcs_prefix}/" if gcs_prefix else f"{gcs_bucket}/"
+    print(f"Scanning for Iceberg tables in: {scan_url}")
+
+    # List immediate subdirectories under the prefix
+    result = subprocess.run(
+        ["gcloud", "storage", "ls", scan_url],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"ERROR: Failed to list GCS path: {scan_url}\n{result.stderr}", file=sys.stderr)
+        sys.exit(1)
+
+    # Each line is a full gs:// path ending with /
+    subdirs = [line.strip() for line in result.stdout.strip().splitlines() if line.strip().endswith("/")]
+
+    if not subdirs:
+        print("No subdirectories found.")
+        return []
+
+    # Check each subdirectory for a metadata/ subfolder
+    tables = []
+    for subdir in subdirs:
+        metadata_path = f"{subdir}metadata/"
+        check = subprocess.run(
+            ["gcloud", "storage", "ls", metadata_path],
+            capture_output=True,
+            text=True,
+        )
+        if check.returncode == 0 and check.stdout.strip():
+            # Extract the relative table path from the full gs:// URL
+            # e.g. gs://bucket/consulting/clients/ -> consulting/clients
+            bucket_prefix = f"{gcs_bucket}/"
+            relative_path = subdir.replace(bucket_prefix, "").strip("/")
+            tables.append(relative_path)
+
+    return tables
+
+
+def confirm_tables(tables: list[str]) -> list[str]:
+    """
+    Display discovered tables and ask the user for confirmation.
+    Returns the confirmed list of table paths, or exits if declined.
+    """
+    print(f"\nDiscovered {len(tables)} Iceberg table(s):\n")
+    for i, table in enumerate(tables, 1):
+        name = table.rstrip("/").split("/")[-1]
+        print(f"  {i:3}. {name:<30} ({table})")
+
+    print()
+    answer = input("Create shortcuts for all tables above? [Y/n] ").strip().lower()
+    if answer in ("", "y", "yes"):
+        return tables
+    else:
+        print("Aborted.")
+        sys.exit(0)
+
+
 def create_shortcut(
     workspace_id: str,
     lakehouse_id: str,
@@ -215,11 +291,22 @@ def cmd_create_shortcuts(config_path: str):
     location_override = config.get("location")
     table_paths = config.get("table_paths", [])
 
+    # Auto-discovery mode: scan GCS for Iceberg tables
+    gcs_bucket = config.get("gcs_bucket")
+    gcs_prefix = config.get("gcs_prefix", "")
+
+    if not table_paths and gcs_bucket:
+        discovered = discover_iceberg_tables(gcs_bucket, gcs_prefix)
+        if not discovered:
+            print("No Iceberg tables found at the specified location.", file=sys.stderr)
+            sys.exit(1)
+        table_paths = confirm_tables(discovered)
+
     if not table_paths:
-        print("No table_paths specified in config file.", file=sys.stderr)
+        print("No table_paths specified in config file and no gcs_bucket for discovery.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Config: {config_path}")
+    print(f"\nConfig: {config_path}")
     print(f"  Workspace:  {workspace_id}")
     print(f"  Lakehouse:  {lakehouse_id}")
     print(f"  Schema:     {schema or '(none)'}")
@@ -231,11 +318,17 @@ def cmd_create_shortcuts(config_path: str):
     token = get_fabric_token()
     connection_id, resolved_location = resolve_connection(connection_ref, token)
 
+    # For discovery mode, derive location from gcs_bucket if not otherwise set
     location = location_override or resolved_location
+    if not location and gcs_bucket:
+        location = gcs_bucket.rstrip("/")
+        if not location.startswith("gs://"):
+            location = f"gs://{location}"
+
     if not location:
         print(
             "ERROR: Could not determine bucket location from the connection.\n"
-            "Add 'location' to the config file.",
+            "Add 'location' or 'gcs_bucket' to the config file.",
             file=sys.stderr,
         )
         sys.exit(1)
