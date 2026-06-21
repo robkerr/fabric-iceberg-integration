@@ -44,7 +44,15 @@ echo "=== Deleting service account: ${SA_EMAIL} ==="
 gcloud iam service-accounts delete "${SA_EMAIL}" --quiet \
   2>/dev/null && echo "  Service account deleted." || echo "  (Service account not found or already deleted.)"
 
+KEY_FILE="${SA_NAME}-key.json"
+echo ""
+if [ -f "${KEY_FILE}" ]; then
+  echo "=== Removing local key file: ${KEY_FILE} ==="
+  rm -f "${KEY_FILE}"
+  echo "  Deleted."
+else
+  echo "=== No local key file found (${KEY_FILE}) ==="
+fi
+
 echo ""
 echo "=== Done ==="
-echo ""
-echo "Note: If you generated a local key file (${SA_NAME}-key.json), you can safely delete it."
