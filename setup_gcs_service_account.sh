@@ -40,6 +40,10 @@ gcloud iam service-accounts create "${SA_NAME}" \
   --description="Service account for Microsoft Fabric to access Iceberg tables in GCS" \
   2>/dev/null || echo "  (Service account may already exist, continuing...)"
 
+# Allow time for IAM propagation before assigning roles
+echo "  Waiting for IAM propagation..."
+sleep 10
+
 echo ""
 echo "=== Granting roles/storage.objectAdmin on gs://${BUCKET_NAME} ==="
 gcloud storage buckets add-iam-policy-binding "gs://${BUCKET_NAME}" \
