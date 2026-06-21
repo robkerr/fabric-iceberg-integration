@@ -12,7 +12,7 @@ This repository is a collection of scripts used to automate and manage Microsoft
 
 ## `gcs_shortcuts/` Contents
 
-| File | What it does |
+| Path | What it does |
 |---|---|
 | `create_lakehouse_shortcuts.py` | Main automation script. Discovers Iceberg tables in GCS (or uses explicit paths from config) and creates Fabric Lakehouse shortcuts. |
 | `shortcuts.yaml` | Configuration file for workspace/lakehouse IDs, connection reference, bucket/prefix, and shortcut options. |
@@ -23,9 +23,10 @@ This repository is a collection of scripts used to automate and manage Microsoft
 | `run.sh` | Bash helper that creates/uses a Python virtual environment, installs dependencies, and runs the shortcut creation script. |
 | `run.ps1` | PowerShell version of the run helper for Windows environments. |
 | `requirements.txt` | Python dependencies required to run the shortcut automation script. |
-| `svc-account-hmac-auth.json` | Example/working JSON credential output format used for Fabric GCS connection setup (HMAC-based). |
+| `svc-account-hmac-auth.json` | Example JSON credential output format for Fabric GCS connection setup (HMAC-based). |
+| `docs/` | Supporting presentation/demo assets for the integration workflow. |
 | `docs/architecture-diagram.png` | 4K architecture diagram for presentations and solution walkthroughs. |
 | `docs/confirm_tables.sql` | SQL used during validation/demo steps for confirming table metadata and format. |
 | `docs/video-demo-script.docx` | Editable demo narration script for presenting the end-to-end solution. |
 
-> Note: `.venv/` under `gcs_shortcuts/` is a local virtual environment and not part of the reusable script package.
+> Note: `.venv/` and `__pycache__/` under `gcs_shortcuts/` are local/generated artifacts and not part of the reusable script package.
