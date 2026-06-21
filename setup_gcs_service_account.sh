@@ -51,6 +51,17 @@ echo "=== Generating key file: ${KEY_FILE} ==="
 gcloud iam service-accounts keys create "${KEY_FILE}" \
   --iam-account="${SA_EMAIL}"
 
+# Add the GCS bucket URL to the key file for Fabric connection setup
+TEMP_KEY=$(mktemp)
+python3 -c "
+import json, sys
+with open('${KEY_FILE}') as f:
+    data = json.load(f)
+data['gcs_bucket_url'] = 'gs://${BUCKET_NAME}'
+with open('${KEY_FILE}', 'w') as f:
+    json.dump(data, f, indent=2)
+"
+
 echo ""
 echo "=== Done ==="
 echo ""
