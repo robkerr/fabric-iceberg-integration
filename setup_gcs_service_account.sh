@@ -3,10 +3,10 @@
 # for use with Microsoft Fabric Iceberg table shortcuts.
 #
 # Usage:
-#   ./setup_gcs_service_account.sh <PROJECT_ID> <BUCKET_NAME>
+#   ./setup_gcs_service_account.sh <PROJECT_ID> <BUCKET_NAME> <SERVICE_ACCOUNT_NAME>
 #
 # This creates:
-#   - A service account named "fabric-gcs-access"
+#   - A service account with the specified name
 #   - Grants it roles/storage.objectAdmin on the specified bucket
 #   - Generates a JSON key file for use in Fabric connection setup
 #
@@ -15,19 +15,20 @@
 
 set -euo pipefail
 
-if [ $# -lt 2 ]; then
-  echo "Usage: $0 <PROJECT_ID> <BUCKET_NAME>"
+if [ $# -lt 3 ]; then
+  echo "Usage: $0 <PROJECT_ID> <BUCKET_NAME> <SERVICE_ACCOUNT_NAME>"
   echo ""
-  echo "  PROJECT_ID   - Your GCP project ID"
-  echo "  BUCKET_NAME  - GCS bucket name (without gs:// prefix)"
+  echo "  PROJECT_ID           - Your GCP project ID"
+  echo "  BUCKET_NAME          - GCS bucket name (without gs:// prefix)"
+  echo "  SERVICE_ACCOUNT_NAME - Name for the service account (e.g. fabric-gcs-access)"
   exit 1
 fi
 
 PROJECT_ID="$1"
 BUCKET_NAME="$2"
-SA_NAME="fabric-gcs-access"
+SA_NAME="$3"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
-KEY_FILE="fabric-gcs-key.json"
+KEY_FILE="${SA_NAME}-key.json"
 
 echo "=== Setting project to ${PROJECT_ID} ==="
 gcloud config set project "${PROJECT_ID}"

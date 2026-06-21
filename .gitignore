@@ -216,4 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-fabric-gcs-key.json
+
+# GCP service account key files
+*-key.json
