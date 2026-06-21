@@ -12,6 +12,10 @@
 #
 # Prerequisites:
 #   - gcloud CLI installed and authenticated (`gcloud auth login`)
+#
+# Example:
+#   ./setup_gcs_service_account.sh gen-lang-client-0875336337 rk-gcp-iceberg svc-fabric-kerr
+#
 
 set -euo pipefail
 

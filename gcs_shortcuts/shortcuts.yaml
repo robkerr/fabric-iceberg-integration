@@ -10,8 +10,8 @@
 #   2. Manual: List explicit table_paths (gcs_bucket/gcs_prefix are ignored).
 
 workspace_id: "510e2f99-ed9d-443b-9f7a-4e2c4521c57b"
-lakehouse_id: "595c96c5-5fcd-41c1-b693-87be92626ebd"
-connection: "gcp-iceberg"          # Connection name or GUID
+lakehouse_id: "0a897696-b684-47dd-8dbd-534c2208dd28"
+connection: "rk-gcp-iceberg"          # Connection name or GUID
 schema: "dbo"                          # Lakehouse schema (omit for non-schema-enabled)
 overwrite: true                        # Replace shortcuts if they already exist
 
@@ -20,6 +20,10 @@ overwrite: true                        # Replace shortcuts if they already exist
 # When table_paths is omitted (or empty), the script uses these to discover tables.
 gcs_bucket: "gs://rk-gcp-iceberg"
 gcs_prefix: "consulting"              # Folder within the bucket to scan
+
+
+
+
 
 # --- Manual mode ---
 # Uncomment and populate table_paths to skip auto-discovery.

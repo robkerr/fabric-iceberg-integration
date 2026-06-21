@@ -12,6 +12,7 @@
 # Prerequisites:
 #   - gcloud CLI installed and authenticated (`gcloud auth login`)
 
+
 param(
     [Parameter(Mandatory=$true)][string]$ProjectId,
     [Parameter(Mandatory=$true)][string]$BucketName,
