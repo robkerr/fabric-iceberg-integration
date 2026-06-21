@@ -1,0 +1,6 @@
+{
+  "service_account": "<account>@<project-id>.iam.gserviceaccount.com",
+  "hmac_access_id": "<generated hmac_access_id>",
+  "hmac_secret": "<generated hmac_secret>",
+  "gcs_endpoint_url": "https://<bucket-name>.storage.googleapis.com"
+}

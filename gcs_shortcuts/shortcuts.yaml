@@ -1,0 +1,40 @@
+# Configuration for creating OneLake shortcuts to GCS Iceberg tables.
+#
+# Usage:
+#   python create_lakehouse_shortcut.py shortcuts.yaml
+#   python create_lakehouse_shortcut.py --help
+#
+# Two modes:
+#   1. Auto-discovery: Set gcs_bucket + gcs_prefix, omit table_paths.
+#      The script scans GCS for Iceberg tables and prompts for confirmation.
+#   2. Manual: List explicit table_paths (gcs_bucket/gcs_prefix are ignored).
+
+workspace_id: "510e2f99-ed9d-443b-9f7a-4e2c4521c57b"
+lakehouse_id: "595c96c5-5fcd-41c1-b693-87be92626ebd"
+connection: "gcp-iceberg"          # Connection name or GUID
+schema: "dbo"                          # Lakehouse schema (omit for non-schema-enabled)
+overwrite: true                        # Replace shortcuts if they already exist
+
+# --- Auto-discovery mode ---
+# Provide a GCS bucket and prefix to scan for Iceberg tables automatically.
+# When table_paths is omitted (or empty), the script uses these to discover tables.
+gcs_bucket: "gs://rk-gcp-iceberg"
+gcs_prefix: "consulting"              # Folder within the bucket to scan
+
+# --- Manual mode ---
+# Uncomment and populate table_paths to skip auto-discovery.
+# Each entry is the path to an Iceberg table within the GCS bucket.
+# The shortcut name is derived from the last segment (e.g. "engagement_roles").
+# table_paths:
+#   - "consulting/clients"
+#   - "consulting/consultant_availability"
+#   - "consulting/consultant_skills"
+#   - "consulting/consultants"
+#   - "consulting/engagement_roles"
+#   - "consulting/engagements"
+#   - "consulting/opportunities"
+#   - "consulting/phases"
+#   - "consulting/practices"
+#   - "consulting/role_skill_requirements"
+#   - "consulting/skills"
+#   - "consulting/staffing_assignments"
