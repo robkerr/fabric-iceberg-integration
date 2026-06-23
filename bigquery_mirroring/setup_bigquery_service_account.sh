@@ -66,10 +66,23 @@ gcloud iam service-accounts create "${SA_NAME}" \
 echo ""
 echo "=== Creating custom IAM role: ${CUSTOM_ROLE_ID} ==="
 
-# Check role state: active, soft-deleted, or absent
-# `gcloud iam roles list` omits soft-deleted roles; use `describe` to detect them
+# Check role state: active, soft-deleted, or absent.
+# Use --show-deleted because `describe` returns an error for soft-deleted roles,
+# making it impossible to distinguish "deleted" from "never existed".
 ROLE_FULL_NAME="projects/${PROJECT_ID}/roles/${CUSTOM_ROLE_ID}"
-ROLE_STATE=$(gcloud iam roles describe "${ROLE_FULL_NAME}" --format="value(deleted)" 2>/dev/null || echo "NOT_FOUND")
+ROLE_CSV=$(gcloud iam roles list --project="${PROJECT_ID}" \
+  --show-deleted \
+  --filter="name=${ROLE_FULL_NAME}" \
+  --format="csv[no-heading](name,deleted)" 2>/dev/null)
+# ROLE_CSV is empty if role doesn't exist, otherwise "name," (active) or "name,True" (soft-deleted)
+
+if [ -z "${ROLE_CSV}" ]; then
+  ROLE_STATE="NOT_FOUND"
+elif echo "${ROLE_CSV}" | grep -q ",True"; then
+  ROLE_STATE="DELETED"
+else
+  ROLE_STATE="ACTIVE"
+fi
 
 ROLE_YAML=$(cat <<YAML
 title: "Fabric BigQuery Mirror"
@@ -106,7 +119,7 @@ YAML
 ROLE_FILE=$(mktemp /tmp/fabric-bq-role-XXXXXX.yaml)
 echo "${ROLE_YAML}" > "${ROLE_FILE}"
 
-if [ "${ROLE_STATE}" = "True" ]; then
+if [ "${ROLE_STATE}" = "DELETED" ]; then
   # Role exists but is soft-deleted (within GCP's 7-day retention window).
   # Undelete it first, then apply the latest permissions via update.
   echo "  Role is soft-deleted — undeleting..."
