@@ -120,26 +120,27 @@ ROLE_FILE=$(mktemp /tmp/fabric-bq-role-XXXXXX.yaml)
 echo "${ROLE_YAML}" > "${ROLE_FILE}"
 
 if [ "${ROLE_STATE}" = "DELETED" ]; then
-  # Role exists but is soft-deleted (within GCP's 7-day retention window).
-  # Undelete it first, then apply the latest permissions via update.
   echo "  Role is soft-deleted — undeleting..."
   gcloud iam roles undelete "${CUSTOM_ROLE_ID}" --project="${PROJECT_ID}" --quiet
   echo "  Updating role permissions..."
   gcloud iam roles update "${CUSTOM_ROLE_ID}" \
     --project="${PROJECT_ID}" \
     --file="${ROLE_FILE}" \
+    --quiet \
     2>/dev/null || echo "  (Role update skipped — already up to date)"
   echo "  Role restored and updated."
 elif [ "${ROLE_STATE}" = "NOT_FOUND" ]; then
   gcloud iam roles create "${CUSTOM_ROLE_ID}" \
     --project="${PROJECT_ID}" \
-    --file="${ROLE_FILE}"
+    --file="${ROLE_FILE}" \
+    --quiet
   echo "  Created new role."
 else
   # Role exists and is active — just update permissions
   gcloud iam roles update "${CUSTOM_ROLE_ID}" \
     --project="${PROJECT_ID}" \
     --file="${ROLE_FILE}" \
+    --quiet \
     2>/dev/null || echo "  (Role update skipped — already up to date)"
   echo "  Updated existing role."
 fi
