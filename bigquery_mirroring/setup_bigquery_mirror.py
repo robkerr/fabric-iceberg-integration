@@ -200,16 +200,28 @@ def cmd_list_connections(name_filter: str | None):
 
 
 def cmd_list_mirrored_databases(workspace_id: str):
-    """List all mirrored databases in a workspace."""
+    """List all mirrored databases in a workspace.
+
+    NOTE: Fabric creates a companion SQLEndpoint item alongside each MirroredDatabase.
+    Both share the same display name. Always use the MirroredDatabase ID in mirroring.yaml,
+    not the SQLEndpoint ID (which powers the SQL analytics endpoint).
+    """
     token = get_fabric_token()
     dbs = list_mirrored_databases(workspace_id, token)
     if not dbs:
         print(f"No mirrored databases found in workspace {workspace_id}.")
+        print(f"\nTip: check that the workspace ID is correct and that you have created a")
+        print(f"  'Mirrored Google BigQuery' item in the Fabric portal.")
         return
-    print(f"{'ID':<38} {'Name':<40} {'Description'}")
-    print(f"{'-'*38} {'-'*40} {'-'*30}")
+
+    print(f"\n  {'ID':<38} {'Name':<40}")
+    print(f"  {'-'*38} {'-'*40}")
     for db in dbs:
-        print(f"{db.get('id',''):<38} {db.get('displayName',''):<40} {db.get('description','')}")
+        print(f"  {db.get('id',''):<38} {db.get('displayName','')}")
+
+    print()
+    print("Use the ID above as 'mirrored_database_id' in mirroring.yaml.")
+    print("(Fabric also creates a SQLEndpoint with a different ID — do NOT use that one.)")
 
 
 def cmd_start(config: dict, token: str):
