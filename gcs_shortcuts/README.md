@@ -36,7 +36,7 @@ Run the setup script to create a service account, grant it access to your GCS bu
 ./setup_gcs_service_account.sh <PROJECT_ID> <BUCKET_NAME> <SERVICE_ACCOUNT_NAME>
 
 # Example
-./setup_gcs_service_account.sh gen-lang-client-0875336337 rk-gcp-iceberg svc-fabric-kerr
+./setup_gcs_service_account.sh my-gcp-project my-iceberg-bucket svc-fabric-gcs
 ```
 
 ```powershell
@@ -47,11 +47,11 @@ Run the setup script to create a service account, grant it access to your GCS bu
 The script outputs a connection summary like this:
 
 ```
-Fabric connection details (also saved in svc-fabric-kerr-key.json):
-  Connection URL: https://rk-gcp-iceberg.storage.googleapis.com
+Fabric connection details (also saved in svc-fabric-gcs-key.json):
+  Connection URL: https://my-iceberg-bucket.storage.googleapis.com
   Access Key ID:  GOOG1E...
   Secret:         (see key file)
-  Bucket:         rk-gcp-iceberg
+  Bucket:         my-iceberg-bucket
 ```
 
 ### Step 2 — Create the GCS connection in Fabric (manual, one-time)
@@ -59,7 +59,7 @@ Fabric connection details (also saved in svc-fabric-kerr-key.json):
 1. In the Fabric portal, go to **Settings → Manage connections and gateways → New connection**
 2. Choose **Google Cloud Storage**
 3. Enter the **Connection URL**, **Access Key ID**, and **Secret** from the key file output in Step 1
-4. Give the connection a name (e.g. `rk-gcp-iceberg`) — you'll reference this in `shortcuts.yaml`
+4. Give the connection a name (e.g. `my-gcs-connection`) — you'll reference this in `shortcuts.yaml`
 
 ### Step 3 — Configure shortcuts.yaml
 
@@ -71,14 +71,14 @@ Find your workspace and lakehouse IDs in the Fabric portal URL:
 ```yaml
 workspace_id: "your-workspace-id"
 lakehouse_id: "your-lakehouse-id"
-connection: "rk-gcp-iceberg"   # connection name or GUID from Step 2
-gcs_bucket: "gs://rk-gcp-iceberg"
-gcs_prefix: "consulting"        # folder within the bucket to scan
+connection: "my-gcs-connection"      # connection name or GUID from Step 2
+gcs_bucket: "gs://my-iceberg-bucket"
+gcs_prefix: "my-folder"              # folder within the bucket to scan
 ```
 
 To find the connection GUID:
 ```bash
-python create_lakehouse_shortcuts.py --list-connections --filter rk-gcp-iceberg
+python create_lakehouse_shortcuts.py --list-connections --filter my-gcs-connection
 ```
 
 ### Step 4 — Create the shortcuts
