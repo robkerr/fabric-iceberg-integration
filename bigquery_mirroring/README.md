@@ -34,10 +34,19 @@ Fabric reads change history from BigQuery using a service account, stages export
 Run the setup script to create a service account with minimal permissions, create the required GCS staging bucket, and enable change history (CDC) on all tables in the dataset:
 
 ```bash
+# Linux / macOS
 ./setup_bigquery_service_account.sh <PROJECT_ID> <DATASET_ID> <SERVICE_ACCOUNT_NAME>
 
 # Example
 ./setup_bigquery_service_account.sh your-project-name your-dataset svc-fabric-bq-mirror
+```
+
+```powershell
+# Windows
+.\setup_bigquery_service_account.ps1 <PROJECT_ID> <DATASET_ID> <SERVICE_ACCOUNT_NAME>
+
+# Example
+.\setup_bigquery_service_account.ps1 your-project-name your-dataset svc-fabric-bq-mirror
 ```
 
 The script outputs a summary of everything you need for Step 2:
@@ -83,11 +92,15 @@ The script outputs a summary of everything you need for Step 2:
 Find the IDs you need using the helper commands:
 
 ```bash
-# Find the MirroredDatabase item ID (use this — not the SQLEndpoint ID)
+# Linux / macOS
 ./run.sh --list-mirrored-databases --workspace <WORKSPACE_ID>
-
-# Find your connection GUID (optional — name works too)
 ./run.sh --list-connections --filter <your-connection-name>
+```
+
+```powershell
+# Windows
+.\run.ps1 --list-mirrored-databases --workspace <WORKSPACE_ID>
+.\run.ps1 --list-connections --filter <your-connection-name>
 ```
 
 Edit `mirroring.yaml`:
@@ -101,11 +114,17 @@ connection: "your-connection-name"                  # connection name or GUID fr
 ### Step 5 — Start mirroring and monitor status
 
 ```bash
-# Start mirroring and poll until Running, then show per-table status
+# Linux / macOS — start mirroring and poll until Running, then show per-table status
 ./run.sh mirroring.yaml
 
 # Check status at any time
 ./run.sh mirroring.yaml --status
+```
+
+```powershell
+# Windows
+.\run.ps1 mirroring.yaml
+.\run.ps1 mirroring.yaml --status
 ```
 
 Example status output:
@@ -122,7 +141,13 @@ Mirroring status: ✓ Running
 ## Stopping mirroring
 
 ```bash
+# Linux / macOS
 ./run.sh mirroring.yaml --stop
+```
+
+```powershell
+# Windows
+.\run.ps1 mirroring.yaml --stop
 ```
 
 ## Teardown
@@ -130,7 +155,7 @@ Mirroring status: ✓ Running
 To remove the service account and clean up GCP resources:
 
 ```bash
-# Remove service account only
+# Linux / macOS — remove service account only
 ./remove_bigquery_service_account.sh your-project-name svc-fabric-bq-mirror
 
 # Also delete the GCS staging bucket (prompts for confirmation)
@@ -140,6 +165,17 @@ To remove the service account and clean up GCP resources:
 ./remove_bigquery_service_account.sh your-project-name svc-fabric-bq-mirror --delete-bucket --delete-role
 ```
 
+```powershell
+# Windows — remove service account only
+.\remove_bigquery_service_account.ps1 your-project-name svc-fabric-bq-mirror
+
+# Also delete the GCS staging bucket (prompts for confirmation)
+.\remove_bigquery_service_account.ps1 your-project-name svc-fabric-bq-mirror -DeleteBucket
+
+# Full teardown — also delete the custom IAM role
+.\remove_bigquery_service_account.ps1 your-project-name svc-fabric-bq-mirror -DeleteBucket -DeleteRole
+```
+
 > **Note on the custom IAM role:** The `FabricBigQueryMirror` role is a shared project-level resource. It is not deleted by default because multiple service accounts (e.g. one per dataset) can reuse it. Pass `--delete-role` only when you're sure no other service accounts in the project are using it.
 
 ## File reference
@@ -147,7 +183,9 @@ To remove the service account and clean up GCP resources:
 | File | What it does |
 |---|---|
 | `setup_bigquery_service_account.sh` | Creates the GCP service account with a custom minimal IAM role, creates the required GCS staging bucket, enables change history (CDC) on all dataset tables, generates a JSON key file, and prints Fabric connection parameters |
-| `remove_bigquery_service_account.sh` | Removes IAM bindings, deletes the service account and its keys, and optionally deletes the GCS staging bucket |
+| `setup_bigquery_service_account.ps1` | PowerShell version of the above for Windows |
+| `remove_bigquery_service_account.sh` | Removes IAM bindings, deletes the service account and its keys, and optionally deletes the GCS staging bucket (`--delete-bucket`) and custom IAM role (`--delete-role`) |
+| `remove_bigquery_service_account.ps1` | PowerShell version of the above for Windows (uses `-DeleteBucket` and `-DeleteRole` switches) |
 | `setup_bigquery_mirror.py` | Fabric-side automation — starts/stops mirroring and reports per-table replication status via the Fabric REST API |
 | `mirroring.yaml` | Configuration file — workspace ID, mirrored database item ID, and connection reference |
 | `run.sh` | Bash helper that creates a Python virtual environment, installs dependencies, and runs the mirror management script |
